@@ -1,0 +1,15 @@
+{
+  "name": "InverseSeek",
+  "short_name": "InverseSeek",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#212121",
+  "theme_color": "#10a37f",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/8649/8649667.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

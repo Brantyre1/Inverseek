@@ -37,6 +37,8 @@ HTML = """
 <html>
 <head>
     <title>InverseSeek</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#10a37f">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #212121; color: #ececec; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -96,11 +98,24 @@ HTML = """
             container.scrollTop = container.scrollHeight;
         }
     </script>
+<script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/sw.js");
+        }
+    </script>
 </body>
 </html>
 """
 
-@app.route('/')
+@app.route("/manifest.json")
+def manifest():
+    return app.send_from_directory("static", "manifest.json")
+
+@app.route("/sw.js")
+def sw():
+    return app.send_from_directory("static", "sw.js")
+
+@app.route("/")
 def index():
     return HTML
 
