@@ -32,6 +32,7 @@ def ask_ai(q):
     except Exception as e:
         return f"Error: {e}"
 
+
 HTML = """
 <!DOCTYPE html>
 <html>
@@ -43,13 +44,19 @@ HTML = """
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #212121; color: #ececec; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        .message { max-width: 80%; padding: 15px; border-radius: 10px; line-height: 1.5; white-space: pre-wrap; font-family: monospace; }
-        .user { align-self: flex-end; background: #2f2f2f; }
-        .bot { align-self: flex-start; background: #444654; }
+        .message-wrapper { display: flex; flex-direction: column; max-width: 85%; }
+        .user-wrapper { align-self: flex-end; align-items: flex-end; }
+        .bot-wrapper { align-self: flex-start; align-items: flex-start; }
+        .message { padding: 15px; border-radius: 10px; line-height: 1.5; white-space: pre-wrap; font-family: monospace; word-wrap: break-word; }
+        .user { background: #2f2f2f; }
+        .bot { background: #444654; }
+        .copy-btn { background: transparent; border: none; color: #888; cursor: pointer; font-size: 12px; margin-top: 5px; padding: 5px; display: flex; align-items: center; gap: 5px; transition: color 0.2s; }
+        .copy-btn:hover { color: #10a37f; }
+        .copy-btn:active { color: #fff; }
         #input-area { padding: 15px; background: #212121; border-top: 1px solid #333; display: flex; gap: 10px; }
         input { flex: 1; padding: 15px; border-radius: 8px; border: 1px solid #444; background: #2f2f2f; color: white; outline: none; font-size: 16px; }
-        button { padding: 15px 20px; background: #10a37f; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        button:disabled { background: #555; }
+        button#send-btn { padding: 15px 20px; background: #10a37f; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        button#send-btn:disabled { background: #555; }
         h3 { text-align: center; color: #888; margin-top: 30vh; font-size: 2em; }
     </style>
 </head>
@@ -63,6 +70,14 @@ HTML = """
     </div>
 
     <script>
+        function copyText(btn, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+            });
+        }
+
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const btn = document.getElementById('send-btn');
@@ -73,14 +88,26 @@ HTML = """
             if(!text) return;
             if(welcome) welcome.style.display = 'none';
 
-            container.innerHTML += `<div class="message user">${text}</div>`;
+            // User Message
+            const userWrapper = document.createElement('div');
+            userWrapper.className = 'message-wrapper user-wrapper';
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message user';
+            userDiv.innerText = text;
+            userWrapper.appendChild(userDiv);
+            container.appendChild(userWrapper);
+
             input.value = '';
             btn.disabled = true;
 
-            const botMsg = document.createElement('div');
-            botMsg.className = 'message bot';
-            botMsg.innerText = 'Thinking...';
-            container.appendChild(botMsg);
+            // Bot Message Placeholder
+            const botWrapper = document.createElement('div');
+            botWrapper.className = 'message-wrapper bot-wrapper';
+            const botDiv = document.createElement('div');
+            botDiv.className = 'message bot';
+            botDiv.innerText = 'Thinking...';
+            botWrapper.appendChild(botDiv);
+            container.appendChild(botWrapper);
             container.scrollTop = container.scrollHeight;
 
             try {
@@ -90,15 +117,24 @@ HTML = """
                     body: JSON.stringify({message: text})
                 });
                 const data = await response.json();
-                botMsg.innerText = data.reply;
+                botDiv.innerText = data.reply;
+
+                // Add Copy Button
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.innerHTML = '📋 Copy';
+                copyBtn.onclick = () => copyText(copyBtn, data.reply);
+                botWrapper.appendChild(copyBtn);
+
             } catch (e) {
-                botMsg.innerText = "Error connecting to the bot.";
+                botDiv.innerText = "Error connecting to the bot.";
             }
             btn.disabled = false;
             container.scrollTop = container.scrollHeight;
         }
     </script>
-<script>
+
+    <script>
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.register("/sw.js");
         }
@@ -106,6 +142,7 @@ HTML = """
 </body>
 </html>
 """
+
 
 @app.route("/manifest.json")
 def manifest():
